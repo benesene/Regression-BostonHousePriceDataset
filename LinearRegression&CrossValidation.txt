@@ -1,0 +1,229 @@
+# Get dataset
+from sklearn.datasets import load_boston
+boston = load_boston()
+print(boston.DESCR)
+boston_df = boston.data
+
+# Check keys of the boston dictionary
+print(boston.keys())
+
+# import important lobrabries and setting for auto print plots
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+sns.set()
+%matplotlib inline
+from sklearn.linear_model import RidgeCV
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+from sklearn import metrics
+from sklearn.metrics import mean_squared_error
+from sklearn.metrics import r2_score
+
+
+# Checkout the data
+
+boston_features = pd.DataFrame(boston_df,columns=boston.feature_names)
+boston_features.head()
+
+# Get more information such as datatype, missing values and variable names
+boston_features.info()
+
+# Discriptive analysis
+boston_features.describe()
+
+## Data Preprocessing
+boston_features.isnull().sum()
+
+# Assign independent and dependent variables
+X = boston_features
+
+y = boston['target']
+
+# Check the correlation between the numerical variables for multicollinearity effects
+sns.set(rc={'figure.figsize':(11.7,8.27)})
+sns.pairplot(boston_features)
+
+# With numerical values
+corr_matrix = boston_pred.corr().round(2)
+# annot = True to print the values inside the square
+sns.heatmap(data=corr_matrix, cmap='cool', annot= True)
+#sns.heatmap(boston_pred.corr(),cmap='cool',annot=True)
+
+# Check if the distribution of the response variables satisifies the normality assumption for paramteric test
+
+sns.set(rc={'figure.figsize':(11.7,8.27)})
+sns.distplot(y,bins=30)
+
+## Feature Engineering
+#  Preparing the data for training the model With Normailzation
+
+min_max = MinMaxScaler()
+boston_min_max = min_max.fit_transform(boston_features)
+
+std = StandardScaler()
+boston_std = std.fit_transform(boston_features)
+
+## Helper Functions to simplify coding for model building and measuring execution time
+
+# some helper functions
+def timer(f):
+    start = time.time()
+    res = f()
+    end = time.time()
+    print("fitting: {}".format(end - start))
+    return res
+
+def build_model_for_data(data, target):
+    X_train, X_test, y_train, y_test = train_test_split(data, target, test_size=0.30, random_state=101)
+    pipeline = make_pipeline(LinearRegression())
+    model = timer(lambda: pipeline.fit(X_train, y_train))
+    return (X_test, y_test, model)
+    
+    ## Model Evaluation
+    from sklearn.pipeline import make_pipeline
+    from sklearn.metrics import mean_squared_error
+    import time
+    
+    # print model evaluation
+print()
+print("Without:")
+X_test, y_test, model = build_model_for_data(boston['data'], boston['target'])
+prediction = model.predict(X_test)
+print("MSE: {}".format(mean_squared_error(y_test, prediction)))
+print()
+print("MinMax:")
+X_test, y_test, model = build_model_for_data(boston_min_max, boston['target'])
+prediction = model.predict(X_test)
+print("MSE: {}".format(mean_squared_error(y_test, prediction)))
+print()
+print("Std:")
+X_test, y_test, model = build_model_for_data(boston_std, boston['target'])
+prediction = model.predict(X_test)
+print("MSE: {}".format(mean_squared_error(y_test, prediction)))
+
+
+## Comparing full model to reduced model to test model effects and significance of some variables
+# For reduced model
+X = pd.DataFrame(np.c_[boston_pred['LSTAT'],boston_pred['RM']], columns = ['LSTAT','RM'])
+y = boston_pred['MEDV']
+
+# Without Normalization
+Xn = boston_pred[['CRIM', 'ZN', 'INDUS', 'CHAS', 'NOX', 'RM', 'AGE', 'DIS', 'RAD', 'TAX',
+       'PTRATIO', 'B', 'LSTAT']]
+
+# For full model
+X_ = boston_min_max_df[['CRIM', 'ZN', 'INDUS', 'CHAS', 'NOX', 'RM', 'AGE', 'DIS', 'RAD', 'TAX',
+       'PTRATIO', 'B', 'LSTAT']]
+
+#Train Test Split   
+from sklearn.model_selection import train_test_split
+
+X_train, X_test, y_train, y_test = train_test_split(X_, y, test_size=0.30, random_state=101)
+print(X_train.shape)
+print(X_test.shape)
+print(y_train.shape)
+print(y_test.shape)
+
+# Creating and Training the model
+
+from sklearn.linear_model import LinearRegression
+lm = LinearRegression()
+model_lin = lm.fit(X_train,y_train)
+
+# model evaluation
+# print the intercept
+print(lm.intercept_)
+
+coeff_df = pd.DataFrame(lm.coef_,X_.columns,columns=['Coefficient'])
+coeff_df
+
+## Interpreting the coefficients:
+
+Holding all other features fixed, a 1 unit increase in per capita crime rate by town (CRIM) is associated with a *decrease of $0.09 *.
+
+Holding all other features fixed, a 1 unit increase in proportion of residential land zoned for lots over 25,000 sq.ft (ZN) is associated with an *increase of $0.05 *.
+
+Holding all other features fixed, a 1 unit increase in proportion of non-retail business acres per town (INDUS) is associated with an *increase of $0.02 *.
+
+Holding all other features fixed, a 1 unit increase in Charles River dummy variable (= 1 if tract bounds river; 0 otherwise)(CHAS) is associated with an *increase of $3.75 *.
+
+Holding all other features fixed, a 1 unit increase in nitric oxides concentration (parts per 10 million) (NOX) is associated with a *decrease of $17.75 *.
+
+Holding all other features fixed, a 1 unit increase in average number of rooms per dwelling (RM) is associated with an *increase of $3.25 *.
+
+Holding all other features fixed, a 1 unit increase in proportion of owner-occupied units built prior to 1940 (AGE) is associated with an *increase of $0.01 *.
+
+Holding all other features fixed, a 1 unit increase in weighted distances to five Boston employment centres (DIS) is associated with a *decrease of $1.41 *.
+
+Holding all other features fixed, a 1 unit increase in index of accessibility to radial highways (RAD) is associated with an *increase of $0.26 *.
+
+Holding all other features fixed, a 1 unit increase in full-value property-tax rate per  10,000(𝑇𝐴𝑋)𝑖𝑠𝑎𝑠𝑠𝑜𝑐𝑖𝑎𝑡𝑒𝑑𝑤𝑖𝑡ℎ𝑎∗𝑑𝑒𝑐𝑟𝑒𝑎𝑠𝑒𝑜𝑓 0.01 *.
+
+Holding all other features fixed, a 1 unit increase in pupil-teacher ratio by town (PTRATIO) is associated with a *decrease of $0.95 *.
+
+Holding all other features fixed, a 1 unit increase in 1000(Bk - 0.63)^2 where Bk is the proportion of blacks by town (B) is associated with an *increase of $0.01 *.
+
+Holding all other features fixed, a 1 unit increase in percentage lower status of the population(LSTAT) is associated with a *decrease of $0.60 *.
+
+
+# Prediction from our Full model
+y_hat = lm.predict(X_test)
+
+sns.jointplot(y_test,y_hat,kind='scatter')
+
+sns.distplot((y_test-y_hat))
+
+# model evalation
+from sklearn import metrics
+from sklearn.metrics import mean_squared_error
+from sklearn.metrics import r2_score
+
+print('MAE:', metrics.mean_absolute_error(y_test, y_hat))
+print('MSE:', metrics.mean_squared_error(y_test, y_hat))
+print('RMSE:', np.sqrt(metrics.mean_squared_error(y_test, y_hat)))
+
+# model evaluation for training set
+y_train_predict = lm.predict(X_train)
+rmse = (np.sqrt(mean_squared_error(y_train, y_train_predict)))
+r2 = r2_score(y_train, y_train_predict)
+
+print("The model performance for training set")
+print("--------------------------------------")
+print('RMSE is {}'.format(rmse))
+print('R2 score is {}'.format(r2))
+print("\n")
+
+# model evaluation for testing set
+y_test_predict = lm.predict(X_test)
+rmse = (np.sqrt(mean_squared_error(y_test, y_test_predict)))
+r2 = r2_score(y_test, y_test_predict)
+
+print("The model performance for testing set")
+print("--------------------------------------")
+print('RMSE is {}'.format(rmse))
+print('R2 score is {}'.format(r2))
+
+## Cross validation
+
+from sklearn.model_selection import cross_val_score
+
+k_fold_acc = cross_val_score(model_lin,X_train,y_train, cv=5)
+k_fold_acc
+
+k_fold_mean = k_fold_acc.mean()
+k_fold_mean
+
+
+
+
+
+
+
+
+
+
+
+
+
